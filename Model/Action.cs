@@ -2,10 +2,12 @@
 
 public class Action
 {
+	public string Id { get; }
 	public string Description { get; }
 
-    public Action(string description)
+    public Action(string id, string description)
     {
+		Id = id;
         Description = description;
     }
 }

@@ -2,6 +2,8 @@
 
 public interface IState
 {
+	public string Id { get; }
+	public string Name { get; }
 	public List<Transition> Transitions { get; }
 	public Action Action { get; }
 }

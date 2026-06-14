@@ -6,13 +6,13 @@ public class SimpleState : IState
 	public SimpleStateEnum StateType { get; }
 
     public Action Action { get; }
+
+	public string Id { get; }
 	public string Name { get; }
 
-    public SimpleState(List<Transition> transitions, SimpleStateEnum stateType, Action action, string name)
+    public SimpleState(SimpleStateEnum stateType, string name)
     {
-        Transitions = transitions;
-        StateType = stateType;
-        Action = action;
-        Name = name;
+		StateType = stateType;
+		Name = name;
     }
 }

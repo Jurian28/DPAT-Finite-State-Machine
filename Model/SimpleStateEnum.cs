@@ -2,7 +2,7 @@
 
 public enum SimpleStateEnum
 {
-	SimpleState,
+	Simple,
 	Initial,
 	Final,
 }

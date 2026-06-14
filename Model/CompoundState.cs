@@ -4,13 +4,14 @@ public class CompoundState : IState
 {
 	public List<Transition> Transitions { get; }
 
-    public Action Action { get;}
+    public Action Action { get; }
 	public List<IState> SubStates { get; }
 
-    public CompoundState(List<Transition> transitions, Action action, List<IState> subStates)
+	public string Id { get; }
+	public string Name { get; }
+
+    public CompoundState(string name)
     {
-        Transitions = transitions;
-        Action = action;
-        SubStates = subStates;
+		Name = name;
     }
 }
