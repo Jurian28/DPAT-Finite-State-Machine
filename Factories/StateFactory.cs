@@ -33,22 +33,13 @@ public class StateFactory {
 
 	private static StateDefinition ConstructStateFromStringParts(string[] parts) {
 		string id = parts[1];
-		string parent = parts[2];
+		string? parent = parts[2];
 		string name = parts[3];
-		string stateType = parts[4];
+		SimpleStateEnum? stateType = GetSimpleStateEnumFromString(parts[4]);
 
-		return ConstructStateDefinition(id, parent, name, stateType);
-	}
-
-	private static StateDefinition ConstructStateDefinition(string id, string parent, string name, string stateTypeString) {
-		string? realParent = parent;
-
-		if(parent == "_") {
-			realParent = null;
-		} 
-		SimpleStateEnum? stateType = GetSimpleStateEnumFromString(stateTypeString);
-
-		return new StateDefinition(id, name, stateType, realParent);
+		if(parent == "_") parent = null;
+		
+		return new StateDefinition(id, name, stateType, parent);
 	}
 
 	private static SimpleStateEnum? GetSimpleStateEnumFromString(string stateType) {

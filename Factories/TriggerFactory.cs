@@ -18,7 +18,7 @@ public class TriggerFactory {
 		List<string> allParts = firstParts;
 		allParts.AddRange(partsByQuote[1]);
 
-		return allParts.ToArray(); // TRIGGER, power_on, turn power on
+		return allParts.ToArray(); // [TRIGGER, power_on, turn power on]
 	}
 
 	private static Trigger ConstructTriggerFromStringParts(string[] parts)

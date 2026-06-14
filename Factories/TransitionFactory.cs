@@ -25,7 +25,8 @@ public class TransitionFactory {
 		parts.AddRange(secondParts);
 		parts.AddRange(lastParts);
 
-		return parts.ToArray(); // TRANSITION, identifier, source_state_identifier, destination_state_identifier, [trigger_identifier], guard_condition
+		return parts.ToArray(); 
+		// [TRANSITION, identifier, source_state_identifier, destination_state_identifier, [trigger_identifier], guard_condition]
 	}
 
 	private static TransitionDefinition ConstructTransitionFromStringParts(string[] parts) {
