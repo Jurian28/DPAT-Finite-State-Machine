@@ -2,12 +2,11 @@
 
 public class Action
 {
-	public string Id { get; }
 	public string Description { get; }
+	public ActionTypeEnum ActionType { get; }
 
-    public Action(string id, string description)
-    {
-		Id = id;
+    public Action(string description, ActionTypeEnum actionType) {
         Description = description;
+		ActionType = actionType;
     }
 }
