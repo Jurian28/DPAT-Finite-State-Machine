@@ -1,7 +1,6 @@
 ﻿namespace DPAT_Finite_State_Machine.Model;
 
-public class Action
-{
+public class Action {
 	public string Description { get; }
 	public ActionTypeEnum ActionType { get; }
 

@@ -7,7 +7,7 @@ namespace DPAT_Finite_State_Machine.Controllers;
 public class LoaderController
 {
 
-	public Diagram ParseFile(string filepath){
+	public Diagram ParseFile(string filepath) {
 		DiagramBuilder builder = new();
 
 		foreach (string line in File.ReadLines(filepath)) {
@@ -16,12 +16,10 @@ public class LoaderController
 
 			ParseLine(line, builder);
 		}
-		builder.TestPrint();
 		return builder.Build();
 	}
 
-    private void ParseLine(string line, DiagramBuilder builder)
-    {
+    private void ParseLine(string line, DiagramBuilder builder) {
 		string firstWord = line.Split(" ")[0];
 
 		switch (firstWord) {

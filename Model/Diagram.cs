@@ -1,7 +1,6 @@
 ﻿namespace DPAT_Finite_State_Machine.Model;
 
-public class Diagram
-{
+public class Diagram {
     public List<IState> States { get; }
 	public List<Transition> Transitions { get; }
 

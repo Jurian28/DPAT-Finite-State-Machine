@@ -28,27 +28,23 @@ public class DiagramBuilder {
 	}
 
 	public Diagram Build() {
+		TestPrintPreBuild();
+
 		List<IState> states = ConstructStates();
-
 		List<Transition> transitions = AddTransitionsBetweenStates(states);
-
 
 		TestPrintStates(states);
 
 		return new Diagram(states, transitions);
-
-
-		// throw new NotImplementedException();
-		// return new Diagram(_states);
 	}
 
 
-    private List<IState> ConstructStates() {
+	private List<IState> ConstructStates() {
 		Dictionary<IState, string?> states = []; // state, parentId
 
 		foreach (StateDefinition stateDefinition in _states) {
 
-            Action? action = GetActionByOwnerId(stateDefinition.Id);
+			Action? action = GetActionByOwnerId(stateDefinition.Id);
 
 			if(stateDefinition.StateType is SimpleStateEnum stateType) { // if stateType == null its a compound state
 				SimpleState state = new(stateDefinition.Id, stateDefinition.Name, stateType, action);
@@ -98,11 +94,11 @@ public class DiagramBuilder {
 			IState destination = states.First(s => s.Id == transitionDefinition.DestinationStateId);
 
 			Transition transition = new(
-				action, 
-				trigger, 
-				destination, 
-				transitionDefinition.GuardCondition
-			);
+					action, 
+					trigger, 
+					destination, 
+					transitionDefinition.GuardCondition
+					);
 			transitions.Add(transition);
 
 			source.AddTransition(transition);
@@ -111,14 +107,14 @@ public class DiagramBuilder {
 		return transitions;
 	}
 
-    private Trigger? GetTriggerById(string? triggerId) {
+	private Trigger? GetTriggerById(string? triggerId) {
 		return _triggers.FirstOrDefault(t => t.Id == triggerId);
-    }
+	}
 
-    public void TestPrint()
+	public void TestPrintPreBuild()
 	{
 		Console.WriteLine("\n========================================");
-		Console.WriteLine("           DIAGRAM DEBUG DUMP");
+		Console.WriteLine("           DIAGRAM DEBUG PRE BUILD");
 		Console.WriteLine("========================================");
 
 		Console.WriteLine(

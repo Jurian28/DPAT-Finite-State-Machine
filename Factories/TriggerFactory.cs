@@ -21,8 +21,7 @@ public class TriggerFactory {
 		return allParts.ToArray(); // [TRIGGER, power_on, turn power on]
 	}
 
-	private static Trigger ConstructTriggerFromStringParts(string[] parts)
-	{
+	private static Trigger ConstructTriggerFromStringParts(string[] parts) {
 		string id = parts[1];
 		string description = parts[2];
 		return new Trigger(id, description);

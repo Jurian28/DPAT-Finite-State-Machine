@@ -1,6 +1,4 @@
-using System.Text.RegularExpressions;
 using DPAT_Finite_State_Machine.Factories.Definitions;
-using DPAT_Finite_State_Machine.Model;
 
 namespace DPAT_Finite_State_Machine.Factories;
 
