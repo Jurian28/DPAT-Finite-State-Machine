@@ -1,4 +1,4 @@
-using DPAT_Finite_State_Machine.Model;
+using DPAT_Finite_State_Machine.Models;
 
 namespace DPAT_Finite_State_Machine.Factories.Definitions;
 

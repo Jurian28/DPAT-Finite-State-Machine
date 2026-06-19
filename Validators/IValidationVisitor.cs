@@ -1,6 +1,6 @@
 namespace DPAT_Finite_State_Machine.Validators;
 
-using DPAT_Finite_State_Machine.Model;
+using Models;
 
 public interface IValidationVisitor
 {

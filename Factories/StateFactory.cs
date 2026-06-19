@@ -1,29 +1,34 @@
 using DPAT_Finite_State_Machine.Factories.Definitions;
-using DPAT_Finite_State_Machine.Model;
+using DPAT_Finite_State_Machine.Models;
 
 namespace DPAT_Finite_State_Machine.Factories;
 
-public class StateFactory {
+public static class StateFactory {
 
 	public static StateDefinition FromString(string line) {
-		string[] parts = ParseString(line);
+		var parts = ParseString(line);
 
 		return ConstructStateFromStringParts(parts);
 	}
 
 	private static string[] ParseString(string line) {
-		List<string> partsByQuote = line.Split('"', StringSplitOptions.TrimEntries).ToList();
+		var partsByQuote = line.Split('"', StringSplitOptions.TrimEntries);
 
-		List<string> firstParts = partsByQuote[0].Split(" ").ToList();
-		List<string> lastParts = partsByQuote[2].Split(" ").ToList();
+		if (partsByQuote.Length < 3) {
+			throw new Exception("Invalid code: state is missing a quoted name");
+		}
+		
+		var firstParts = partsByQuote[0].Split(' ', StringSplitOptions.RemoveEmptyEntries).ToList();
+		var name = partsByQuote[1];
+		var lastParts = partsByQuote[2].Split(' ', StringSplitOptions.RemoveEmptyEntries).ToList();
 
 		if (!lastParts.Remove(":")) {
 			throw new Exception("Invalid code: missing ':' for state");
-		} 
+		}
 
-		List<string> allParts = firstParts;
+		var allParts = firstParts;
 
-		allParts.AddRange(partsByQuote[1]);
+		allParts.Add(name);
 		allParts.AddRange(lastParts);
 
 		allParts[^1] = allParts[^1].TrimEnd(';');
@@ -32,13 +37,13 @@ public class StateFactory {
 	}
 
 	private static StateDefinition ConstructStateFromStringParts(string[] parts) {
-		string id = parts[1];
-		string? parent = parts[2];
-		string name = parts[3];
-		SimpleStateEnum? stateType = GetSimpleStateEnumFromString(parts[4]);
+		var id = parts[1];
+		var parent = parts[2];
+		var name = parts[3];
+		var stateType = GetSimpleStateEnumFromString(parts[4]);
 
 		if(parent == "_") parent = null;
-		
+
 		return new StateDefinition(id, name, stateType, parent);
 	}
 

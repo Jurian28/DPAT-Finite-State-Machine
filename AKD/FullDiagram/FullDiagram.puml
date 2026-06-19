@@ -1,0 +1,321 @@
+@startuml FullDiagram
+
+' ============================================================
+'  FULL CLASS DIAGRAM - DPAT Finite State Machine
+'  Complete solution with all layers and design patterns.
+'  Patterns per group:
+'   - Model        : COMPOSITE
+'   - Validators   : VISITOR
+'   - Factories    : FACTORY METHOD + BUILDER
+'   - Views        : ABSTRACT FACTORY
+'   - Controllers  : MVC (orchestration)
+' ============================================================
+
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam linetype ortho
+hide empty members
+
+' ============================================================
+'  MODEL  --  Pattern: COMPOSITE
+' ============================================================
+package "Models" {
+
+    interface IState <<Component>> {
+        +Id : string
+        +Name : string
+        +Transitions : List<Transition>
+        +Actions : List<Action>
+        +AddTransition(transition : Transition)
+        +Accept(visitor : IValidationVisitor)
+    }
+
+    class SimpleState <<Leaf>> {
+        +Id : string
+        +Name : string
+        +StateType : SimpleStateEnum
+        +Actions : List<Action>
+        +Transitions : List<Transition>
+        +AddTransition(transition : Transition)
+        +Accept(visitor : IValidationVisitor)
+    }
+
+    class CompoundState <<Composite>> {
+        +Id : string
+        +Name : string
+        +Actions : List<Action>
+        +SubStates : List<IState>
+        +Transitions : List<Transition>
+        +SetSubStates(subStates : List<IState>)
+        +AddTransition(transition : Transition)
+        +Accept(visitor : IValidationVisitor)
+    }
+
+    class Transition {
+        +Action : Action?
+        +Trigger : Trigger?
+        +ToState : IState
+        +Condition : string
+        +Accept(visitor : IValidationVisitor)
+    }
+
+    class Action {
+        +Description : string
+        +ActionType : ActionTypeEnum
+    }
+
+    class Trigger {
+        +Id : string
+        +Description : string
+    }
+
+    class Diagram <<ObjectStructure>> {
+        +States : List<IState>
+        -Transitions : List<Transition>
+        +Accept(visitor : IValidationVisitor)
+    }
+
+    enum SimpleStateEnum {
+        Simple
+        Initial
+        Final
+    }
+
+    enum ActionTypeEnum {
+        EntryAction
+        DoAction
+        ExitAction
+        TransitionAction
+    }
+}
+
+note top of IState
+  <b>Composite pattern</b>
+  IState = Component, SimpleState = Leaf,
+  CompoundState = Composite (SubStates)
+end note
+
+IState <|.. SimpleState
+IState <|.. CompoundState
+CompoundState o--> "0..*" IState : SubStates
+SimpleState --> SimpleStateEnum : StateType
+IState o--> "0..*" Transition : Transitions
+IState o--> "0..*" Action : Actions
+Transition --> "0..1" Action
+Transition --> "0..1" Trigger
+Transition --> "1" IState : ToState
+Action --> ActionTypeEnum
+Diagram o--> "0..*" IState : States
+Diagram o--> "0..*" Transition : Transitions
+
+' ============================================================
+'  DEFINITIONS  --  flat DTOs parsed from the text file
+' ============================================================
+package "Factories.Definitions" {
+
+    class StateDefinition {
+        +Id : string
+        +Name : string
+        +StateType : SimpleStateEnum?
+        +ParentId : string?
+    }
+
+    class ActionDefinition {
+        +OwnerId : string
+        +Description : string
+        +ActionType : ActionTypeEnum
+    }
+
+    class TransitionDefinition {
+        +Id : string
+        +SourceStateId : string
+        +DestinationStateId : string
+        +TriggerId : string?
+        +GuardCondition : string
+    }
+}
+
+' ============================================================
+'  FACTORIES  --  Pattern: FACTORY METHOD + BUILDER
+' ============================================================
+package "Factories" {
+
+    class StateFactory <<static>> {
+        +{static} FromString(line : string) : StateDefinition
+    }
+    class ActionFactory <<static>> {
+        +{static} FromString(line : string) : ActionDefinition
+    }
+    class TriggerFactory <<static>> {
+        +{static} FromString(line : string) : Trigger
+    }
+    class TransitionFactory <<static>> {
+        +{static} FromString(line : string) : TransitionDefinition
+    }
+
+    class DiagramBuilder <<Builder>> {
+        +AddState(state : StateDefinition) : DiagramBuilder
+        +AddTransition(transition : TransitionDefinition) : DiagramBuilder
+        +AddAction(action : ActionDefinition) : DiagramBuilder
+        +AddTrigger(trigger : Trigger) : DiagramBuilder
+        +Build() : Diagram
+    }
+}
+
+note top of StateFactory
+  <b>Factory Method</b>
+  FromString() parses a text line
+  into a *Definition / Trigger.
+end note
+
+note top of DiagramBuilder
+  <b>Builder</b>
+  Add*() collects definitions,
+  Build() constructs the Diagram.
+end note
+
+StateFactory ..> StateDefinition : creates
+ActionFactory ..> ActionDefinition : creates
+TriggerFactory ..> Trigger : creates
+TransitionFactory ..> TransitionDefinition : creates
+
+DiagramBuilder o--> "0..*" StateDefinition
+DiagramBuilder o--> "0..*" TransitionDefinition
+DiagramBuilder o--> "0..*" ActionDefinition
+DiagramBuilder o--> "0..*" Trigger
+DiagramBuilder ..> Diagram : builds
+
+' ============================================================
+'  CONTROLLERS  --  Pattern: MVC
+' ============================================================
+package "Controllers" {
+
+    class MainController {
+        +{static} Start(args : string[])
+    }
+
+    class LoaderController <<Director>> {
+        +ParseFile(filepath : string) : Diagram
+        -ParseLine(line : string, builder : DiagramBuilder)
+    }
+}
+
+note top of MainController
+  <b>MVC</b>
+  Controllers connect Model and View;
+  LoaderController = Director (Builder).
+end note
+
+MainController --> LoaderController
+MainController ..> ViewFactory
+MainController ..> IView
+MainController ..> ValidationVisitor
+LoaderController ..> DiagramBuilder
+LoaderController ..> StateFactory
+LoaderController ..> ActionFactory
+LoaderController ..> TriggerFactory
+LoaderController ..> TransitionFactory
+
+' ============================================================
+'  VALIDATORS  --  Pattern: VISITOR
+' ============================================================
+package "Validators" {
+
+    interface IValidationVisitor <<Visitor>> {
+        +Visit(simpleState : SimpleState)
+        +Visit(compoundState : CompoundState)
+        +Visit(transition : Transition)
+        +Visit(diagram : Diagram)
+    }
+
+    abstract class ValidationVisitor {
+        +Name : string
+        +Errors : IReadOnlyList<string>
+        +IsValid : bool
+        #AddError(message : string)
+    }
+
+    class InitialFinalStateValidator
+    class TransitionTargetValidator
+    class ReachableValidator
+    class DeterminismValidator
+}
+
+note top of IValidationVisitor
+  <b>Visitor pattern</b>
+  Validators visit the model elements
+  via Accept() (double dispatch).
+end note
+
+IValidationVisitor <|.. ValidationVisitor
+ValidationVisitor <|-- InitialFinalStateValidator
+ValidationVisitor <|-- TransitionTargetValidator
+ValidationVisitor <|-- ReachableValidator
+ValidationVisitor <|-- DeterminismValidator
+
+IValidationVisitor ..> SimpleState
+IValidationVisitor ..> CompoundState
+IValidationVisitor ..> Transition
+IValidationVisitor ..> Diagram
+
+' ============================================================
+'  VIEWS  --  Pattern: ABSTRACT FACTORY
+' ============================================================
+package "Views" {
+
+    class ViewFactory <<AbstractFactory, static>> {
+        +{static} Create(mode : ViewMode, outputDirectory : string) : IView
+    }
+
+    enum ViewMode {
+        Textual
+        Graphical
+    }
+
+    interface IView <<AbstractProduct>> {
+        +AskForFilePath() : string
+        +ShowError(message : string)
+        +ShowDiagram(diagram : Diagram, title : string?)
+        +ShowValidationReport(validators : IEnumerable<ValidationVisitor>)
+    }
+
+    abstract class ConsoleView {
+        +AskForFilePath() : string
+        +ShowError(message : string)
+        +ShowValidationReport(..)
+        +{abstract} ShowDiagram(..)
+    }
+
+    class TextualView <<ConcreteProduct>> {
+        +ShowDiagram(..)
+        +RenderState(state : IState, depth : int)
+    }
+
+    class GraphicalView <<ConcreteProduct>> {
+        +ShowDiagram(..)
+    }
+}
+
+note top of ViewFactory
+  <b>Abstract Factory</b>
+  ViewFactory = factory, IView = product,
+  Textual/Graphical = concrete products.
+end note
+
+IView <|.. ConsoleView
+ConsoleView <|-- TextualView
+ConsoleView <|-- GraphicalView
+ViewFactory ..> IView : creates
+ViewFactory --> ViewMode
+IView ..> Diagram : reads (read-only)
+ConsoleView ..> ValidationVisitor : reports
+
+' ============================================================
+'  ENTRY POINT
+' ============================================================
+class Program <<entry>> {
+    +{static} Main(args : string[])
+}
+Program ..> MainController
+
+@enduml

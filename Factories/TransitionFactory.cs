@@ -2,35 +2,40 @@ using DPAT_Finite_State_Machine.Factories.Definitions;
 
 namespace DPAT_Finite_State_Machine.Factories;
 
-public class TransitionFactory {
+public static class TransitionFactory {
 
 	public static TransitionDefinition FromString(string line) {
-		string[] parts = ParseString(line);
+		var parts = ParseString(line);
 
 		return ConstructTransitionFromStringParts(parts);
 	}
 
     private static string[] ParseString(string line) {
 
-		var quoteParts = line.Split('"', StringSplitOptions.TrimEntries).ToList();
-		var arrowParts = quoteParts[0].Split(" -> ").ToList();
+		var quoteParts = line.Split('"', StringSplitOptions.TrimEntries);
+		var beforeQuote = quoteParts[0].TrimEnd(';', ' ');
+		var guardCondition = quoteParts.Length >= 2 ? quoteParts[1] : string.Empty;
+		var arrowParts = beforeQuote.Split(" -> ");
 
-		var firstParts = arrowParts[0].Split(" ").ToList();
-		var secondParts = arrowParts[1].Split(" ").ToList();
-		var lastParts = quoteParts[1];
+		if (arrowParts.Length != 2) {
+			throw new Exception("Invalid code: transition is missing '->'");
+		}
+
+		var firstParts = arrowParts[0].Split(' ', StringSplitOptions.RemoveEmptyEntries).ToList();
+		var secondParts = arrowParts[1].Split(' ', StringSplitOptions.RemoveEmptyEntries).ToList();
 
 		var parts = firstParts;
 		parts.AddRange(secondParts);
-		parts.AddRange(lastParts);
+		parts.Add(guardCondition);
 
-		return parts.ToArray(); 
+		return parts.ToArray();
 		// [TRANSITION, identifier, source_state_identifier, destination_state_identifier, [trigger_identifier], guard_condition]
 	}
 
 	private static TransitionDefinition ConstructTransitionFromStringParts(string[] parts) {
-		string id = parts[1];
-		string src = parts[2];
-		string desc = parts[3];
+		var id = parts[1];
+		var src = parts[2];
+		var desc = parts[3];
 		string? trigger;
 		string guardCondition;
 

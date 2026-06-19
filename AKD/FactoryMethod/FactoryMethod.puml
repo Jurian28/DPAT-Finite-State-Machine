@@ -1,0 +1,81 @@
+@startuml FactoryMethod
+
+' ============================================================
+'  FACTORY METHOD pattern
+'  Elke *Factory zet via FromString() een tekstregel uit de
+'  FSM-definitie om in een platte Definition (of Trigger).
+'  De LoaderController kiest, op basis van het eerste woord
+'  van de regel, welke factory de regel mag maken.
+' ============================================================
+
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+hide empty members
+
+package "Controllers" {
+    class LoaderController <<Client>> {
+        -ParseLine(line : string, builder : DiagramBuilder)
+    }
+}
+
+package "Factories" {
+    class StateFactory {
+        +{static} FromString(line : string) : StateDefinition
+    }
+    class ActionFactory {
+        +{static} FromString(line : string) : ActionDefinition
+    }
+    class TriggerFactory {
+        +{static} FromString(line : string) : Trigger
+    }
+    class TransitionFactory {
+        +{static} FromString(line : string) : TransitionDefinition
+    }
+}
+
+package "Factories.Definitions" {
+    class StateDefinition {
+        +Id : string
+        +Name : string
+        +StateType : SimpleStateEnum?
+        +ParentId : string?
+    }
+    class ActionDefinition {
+        +OwnerId : string
+        +Description : string
+        +ActionType : ActionTypeEnum
+    }
+    class TransitionDefinition {
+        +Id : string
+        +SourceStateId : string
+        +DestinationStateId : string
+        +TriggerId : string?
+        +GuardCondition : string
+    }
+}
+
+package "Models" {
+    class Trigger {
+        +Id : string
+        +Description : string
+    }
+}
+
+note top of StateFactory
+  <b>Factory Method pattern</b>
+  FromString() = factory method:
+  parse een tekstregel naar een
+  *Definition / Trigger product.
+end note
+
+StateFactory ..> StateDefinition : creates
+ActionFactory ..> ActionDefinition : creates
+TriggerFactory ..> Trigger : creates
+TransitionFactory ..> TransitionDefinition : creates
+
+LoaderController ..> StateFactory
+LoaderController ..> ActionFactory
+LoaderController ..> TriggerFactory
+LoaderController ..> TransitionFactory
+
+@enduml

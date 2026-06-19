@@ -1,0 +1,73 @@
+@startuml Visitor
+
+' ============================================================
+'  VISITOR pattern
+'  Elke validator is een Visitor die de model-elementen bezoekt.
+'  De elementen (IState, Transition, Diagram) dispatchen via
+'  Accept() naar de juiste Visit-overload (double dispatch).
+' ============================================================
+
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+hide empty members
+
+package "Validators" {
+
+    interface IValidationVisitor <<Visitor>> {
+        +Visit(simpleState : SimpleState)
+        +Visit(compoundState : CompoundState)
+        +Visit(transition : Transition)
+        +Visit(diagram : Diagram)
+    }
+
+    abstract class ValidationVisitor <<AbstractVisitor>> {
+        +Name : string
+        +Errors : IReadOnlyList<string>
+        +IsValid : bool
+        #AddError(message : string)
+        +Visit(..)  '' no-op defaults
+    }
+
+    class InitialFinalStateValidator <<ConcreteVisitor>>
+    class TransitionTargetValidator <<ConcreteVisitor>>
+    class ReachableValidator <<ConcreteVisitor>>
+    class DeterminismValidator <<ConcreteVisitor>>
+}
+
+package "Models" {
+    interface IState <<Element>> {
+        +Accept(visitor : IValidationVisitor)
+    }
+    class SimpleState <<ConcreteElement>>
+    class CompoundState <<ConcreteElement>>
+    class Transition <<Element>> {
+        +Accept(visitor : IValidationVisitor)
+    }
+    class Diagram <<ObjectStructure>> {
+        +Accept(visitor : IValidationVisitor)
+    }
+}
+
+note top of IValidationVisitor
+  <b>Visitor pattern</b>
+  IValidationVisitor = Visitor
+  ValidationVisitor  = abstracte basis (no-op Visits)
+  *Validator         = ConcreteVisitors
+  IState/Transition  = Elements (Accept = double dispatch)
+  Diagram            = ObjectStructure
+end note
+
+IValidationVisitor <|.. ValidationVisitor
+ValidationVisitor <|-- InitialFinalStateValidator
+ValidationVisitor <|-- TransitionTargetValidator
+ValidationVisitor <|-- ReachableValidator
+ValidationVisitor <|-- DeterminismValidator
+
+IState <|.. SimpleState
+IState <|.. CompoundState
+
+Diagram ..> IValidationVisitor : Accept dispatcht
+IState ..> IValidationVisitor : Accept dispatcht
+Transition ..> IValidationVisitor : Accept dispatcht
+
+@enduml

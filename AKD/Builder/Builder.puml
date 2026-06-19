@@ -1,0 +1,49 @@
+@startuml Builder
+
+' ============================================================
+'  BUILDER pattern
+'  DiagramBuilder verzamelt stapsgewijs de losse definitions
+'  (fluent Add*()) en construeert in Build() het volledige
+'  Diagram (Product). LoaderController treedt op als Director.
+' ============================================================
+
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+hide empty members
+
+package "Controllers" {
+    class LoaderController <<Director>> {
+        +ParseFile(filepath : string) : Diagram
+        -ParseLine(line : string, builder : DiagramBuilder)
+    }
+}
+
+package "Factories" {
+    class DiagramBuilder <<Builder>> {
+        +AddState(state : StateDefinition) : DiagramBuilder
+        +AddTransition(transition : TransitionDefinition) : DiagramBuilder
+        +AddAction(action : ActionDefinition) : DiagramBuilder
+        +AddTrigger(trigger : Trigger) : DiagramBuilder
+        +Build() : Diagram
+    }
+}
+
+package "Models" {
+    class Diagram <<Product>> {
+        +States : List<IState>
+        +Transitions : List<Transition>
+    }
+}
+
+note top of DiagramBuilder
+  <b>Builder pattern</b>
+  DiagramBuilder   = Builder (fluent Add*())
+  Build()          = construeert het Product
+  Diagram          = Product
+  LoaderController = Director
+end note
+
+LoaderController --> DiagramBuilder : gebruikt
+DiagramBuilder ..> Diagram : Build()
+
+@enduml

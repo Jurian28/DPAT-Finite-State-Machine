@@ -1,0 +1,74 @@
+@startuml AbstractFactory
+
+' ============================================================
+'  ABSTRACT FACTORY pattern
+'  ViewFactory levert de presentatielaag (IView) zonder dat de
+'  controller weet welke concrete view hij krijgt. Zo is de hele
+'  user interface (tekstueel <-> grafisch) in een keer wisselbaar.
+' ============================================================
+
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+hide empty members
+
+package "Controllers" {
+    class MainController <<Client>> {
+        +Start(args : string[])
+    }
+}
+
+package "Views" {
+    class ViewFactory <<AbstractFactory, static>> {
+        +{static} Create(mode : ViewMode, outputDirectory : string) : IView
+    }
+
+    enum ViewMode {
+        Textual
+        Graphical
+    }
+    note bottom of ViewMode : eigen bestand ViewMode.cs
+
+    interface IView <<AbstractProduct>> {
+        +AskForFilePath() : string
+        +ShowError(message : string)
+        +ShowDiagram(diagram : Diagram, title : string?)
+        +ShowValidationReport(validators : IEnumerable<ValidationVisitor>)
+    }
+
+    abstract class ConsoleView {
+        +AskForFilePath() : string
+        +ShowError(message : string)
+        +ShowValidationReport(..)
+        +{abstract} ShowDiagram(..)
+    }
+
+    class TextualView <<ConcreteProduct>> {
+        +ShowDiagram(..)  '' ASCII (Bijlage C)
+    }
+
+    class GraphicalView <<ConcreteProduct>> {
+        +ShowDiagram(..)  '' PlantUML -> .png
+    }
+}
+
+note top of ViewFactory
+  <b>Abstract Factory pattern</b>
+  ViewFactory            = Abstract Factory (Create)
+  IView                  = Abstract Product
+  TextualView/Graphical  = Concrete Products
+  MainController         = Client
+end note
+
+IView <|.. ConsoleView
+ConsoleView <|-- TextualView
+ConsoleView <|-- GraphicalView
+
+ViewFactory ..> IView : creates
+ViewFactory ..> TextualView : creates
+ViewFactory ..> GraphicalView : creates
+ViewFactory --> ViewMode : kiest product o.b.v.
+
+MainController ..> ViewFactory : gebruikt
+MainController ..> IView : werkt tegen interface
+
+@enduml

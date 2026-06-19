@@ -1,22 +1,34 @@
 namespace DPAT_Finite_State_Machine.Validators;
 
-using DPAT_Finite_State_Machine.Model;
+using Models;
 
-public class DeterminismValidator : IValidationVisitor
+public class DeterminismValidator : ValidationVisitor
 {
-	public void Visit(SimpleState simpleState)
-	{
-	}
+	public override string Name => "Determinism";
 
-	public void Visit(CompoundState compoundState)
-	{
-	}
+	public override void Visit(SimpleState simpleState) => CheckOutgoing(simpleState);
 
-	public void Visit(Transition transition)
-	{
-	}
+	public override void Visit(CompoundState compoundState) => CheckOutgoing(compoundState);
 
-	public void Visit(Diagram diagram)
+	private void CheckOutgoing(IState state)
 	{
+		var groups = state.Transitions
+			.GroupBy(t => (trigger: t.Trigger?.Id ?? string.Empty, guard: t.Condition ?? string.Empty));
+
+		foreach (var group in groups)
+		{
+			if (group.Count() <= 1) continue;
+
+			var trigger = string.IsNullOrEmpty(group.Key.trigger)
+				? "no trigger"
+				: $"trigger '{group.Key.trigger}'";
+			var guard = string.IsNullOrEmpty(group.Key.guard)
+				? "no guard"
+				: $"guard '{group.Key.guard}'";
+
+			AddError(
+				$"State '{state.Name}' ({state.Id}) has {group.Count()} outgoing transitions " +
+				$"with {trigger} and {guard} (non-deterministic).");
+		}
 	}
 }

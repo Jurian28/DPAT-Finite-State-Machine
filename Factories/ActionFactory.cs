@@ -1,50 +1,55 @@
 using DPAT_Finite_State_Machine.Factories.Definitions;
-using DPAT_Finite_State_Machine.Model;
+using DPAT_Finite_State_Machine.Models;
 
 namespace DPAT_Finite_State_Machine.Factories;
 
-public class ActionFactory {
+public static class ActionFactory {
 
 	public static ActionDefinition FromString(string line) {
-		string[] parts = ParseString(line);
+		var parts = ParseString(line);
 
 		return ConstructActionFromStringParts(parts);
 	}
 
 	private static string[] ParseString(string line) {
-		List<string> partsByQuote = line.Split('"', StringSplitOptions.TrimEntries).ToList();
+		var partsByQuote = line.Split('"', StringSplitOptions.TrimEntries);
 
-		List<string> firstParts = partsByQuote[0].Split(" ").ToList();
-		List<string> lastParts = partsByQuote[2].Split(" ").ToList();
+		if (partsByQuote.Length < 3) {
+			throw new Exception("Invalid code: action is missing a quoted description");
+		}
+
+		var firstParts = partsByQuote[0].Split(' ', StringSplitOptions.RemoveEmptyEntries).ToList();
+		var description = partsByQuote[1];
+		var lastParts = partsByQuote[2].Split(' ', StringSplitOptions.RemoveEmptyEntries).ToList();
 
 		if (!lastParts.Remove(":")) {
 			throw new Exception("Invalid code: missing ':' for action");
-		} 
+		}
 
-		List<string> allParts = firstParts;
+		var allParts = firstParts;
 
-		allParts.AddRange(partsByQuote[1]);
+		allParts.Add(description);
 		allParts.AddRange(lastParts);
 
 		allParts[^1] = allParts[^1].TrimEnd(';');
 
-		return allParts.ToArray(); 
+		return allParts.ToArray();
 	}
 
 	private static ActionDefinition ConstructActionFromStringParts(string[] parts) {
-		string ownerId = parts[1];
-		string description = parts[2];
-		ActionTypeEnum actionType = GetActionTypeEnumFromString(parts[3]);
+		var ownerId = parts[1];
+		var description = parts[2];
+		var actionType = GetActionTypeEnumFromString(parts[3]);
 
 		return new ActionDefinition(ownerId, description, actionType);
 	}
 
 	private static ActionTypeEnum GetActionTypeEnumFromString(string actionType) {
 		return actionType switch {
-			"ENTRY_ACTION" => ActionTypeEnum.Entry_action,
-			"DO_ACTION" => ActionTypeEnum.Do_action,
-			"EXIT_ACTION" => ActionTypeEnum.Exit_action,
-			"TRANSITION_ACTION" => ActionTypeEnum.Transition_action,
+			"ENTRY_ACTION" => ActionTypeEnum.EntryAction,
+			"DO_ACTION" => ActionTypeEnum.DoAction,
+			"EXIT_ACTION" => ActionTypeEnum.ExitAction,
+			"TRANSITION_ACTION" => ActionTypeEnum.TransitionAction,
 
 			_ => throw new Exception("Invalid code: invalid actionType: " + actionType),
 		};

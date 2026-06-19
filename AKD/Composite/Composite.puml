@@ -1,0 +1,57 @@
+@startuml Composite
+
+' ============================================================
+'  COMPOSITE pattern
+'  Een toestand kan een losse state (Leaf) zijn of een
+'  samengestelde state (Composite) die zelf weer states bevat.
+'  De client (Diagram) behandelt beide via dezelfde IState.
+' ============================================================
+
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+hide empty members
+
+package "Models" {
+
+    interface IState <<Component>> {
+        +Id : string
+        +Name : string
+        +Transitions : List<Transition>
+        +Actions : List<Action>
+        +AddTransition(transition : Transition)
+        +Accept(visitor : IValidationVisitor)
+    }
+
+    class SimpleState <<Leaf>> {
+        +StateType : SimpleStateEnum
+        +Actions : List<Action>
+        +AddTransition(transition : Transition)
+    }
+
+    class CompoundState <<Composite>> {
+        +Actions : List<Action>
+        +SubStates : List<IState>
+        +SetSubStates(subStates : List<IState>)
+        +AddTransition(transition : Transition)
+    }
+
+    class Diagram <<Client>> {
+        +States : List<IState>
+        +Transitions : List<Transition>
+    }
+}
+
+note top of IState
+  <b>Composite pattern</b>
+  IState        = Component
+  SimpleState   = Leaf
+  CompoundState = Composite (bevat SubStates)
+  Diagram       = Client
+end note
+
+IState <|.. SimpleState
+IState <|.. CompoundState
+CompoundState o--> "0..*" IState : SubStates
+Diagram o--> "0..*" IState : States
+
+@enduml
