@@ -1,0 +1,75 @@
+@startuml TestStructure
+
+' ============================================================
+'  UNIT TEST STRUCTUUR
+'  De test-harness (xUnit) en waar die aan raakt:
+'  ValidatorTests gebruikt de Fsm-builder om Models op te
+'  bouwen en draait daar de echte Validators op.
+' ============================================================
+
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+hide empty members
+
+package "Tests" {
+
+    class ValidatorTests <<TestFixture>> {
+        +Determinism_ReportsError_WhenTwoTransitionsShareTriggerAndGuard()
+        +Determinism_IsValid_WhenOutgoingTransitionsHaveDistinctTriggers()
+        +Reachable_ReportsError_WhenStateCannotBeReachedFromInitial()
+        +Reachable_TreatsSubstate_AsReachable_ThroughCompoundParent()
+        +Reachable_ReportsError_WhenConditionalTransitionIsShadowedByUnconditionalOne()
+        +InitialFinal_ReportsError_WhenNoInitialStateExists()
+        +InitialFinal_ReportsError_WhenMultipleInitialStatesExist()
+        +InitialFinal_ReportsError_WhenFinalStateHasOutgoingTransition()
+        +TransitionTarget_ReportsError_WhenTransitionTargetsUnknownState()
+        +TransitionTarget_ReportsError_WhenTransitionTargetsInitialState()
+    }
+
+    class Fsm <<TestDataBuilder>> {
+        {static} +Simple(id, type, name) : SimpleState
+        {static} +Compound(id, subStates, name) : CompoundState
+        {static} +Trigger(id) : Trigger
+        {static} +Connect(source, target, trigger, condition) : Transition
+    }
+}
+
+package "Validators (System Under Test)" {
+    abstract class ValidationVisitor {
+        +Errors : IReadOnlyList<string>
+        +IsValid : bool
+    }
+    class DeterminismValidator
+    class ReachableValidator
+    class InitialFinalStateValidator
+    class TransitionTargetValidator
+}
+
+package "Models" {
+    class Diagram {
+        +Accept(visitor)
+    }
+    interface IState
+    class Transition
+}
+
+ValidationVisitor <|-- DeterminismValidator
+ValidationVisitor <|-- ReachableValidator
+ValidationVisitor <|-- InitialFinalStateValidator
+ValidationVisitor <|-- TransitionTargetValidator
+
+ValidatorTests ..> Fsm : Arrange via builder
+Fsm ..> IState : maakt SimpleState / CompoundState
+Fsm ..> Transition : maakt + koppelt aan state
+ValidatorTests ..> Diagram : new Diagram(states, transitions)
+ValidatorTests ..> ValidationVisitor : Act: diagram.Accept(validator)\nAssert: IsValid / Errors
+Diagram ..> ValidationVisitor : double dispatch
+
+note bottom of ValidatorTests
+  Elke [Fact] isoleert één businessregel:
+  bouwt een minimaal diagram, draait precies
+  één validator en assert op IsValid / Errors.
+  Tests zijn onafhankelijk en deterministisch.
+end note
+
+@enduml

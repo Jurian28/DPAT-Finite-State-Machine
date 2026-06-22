@@ -1,0 +1,57 @@
+@startuml TestFlow
+
+' ============================================================
+'  UNIT TEST FLOW (Arrange - Act - Assert)
+'  Hoe één validator-test werkt: de test bouwt een minimaal
+'  diagram, draait de echte validator via Accept() (double
+'  dispatch, Visitor pattern) en controleert daarna Errors.
+' ============================================================
+
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 220
+hide footbox
+
+actor "dotnet test" as Runner
+
+participant "ValidatorTests\n(xUnit [Fact])" as Test
+participant "Fsm\n(test data builder)" as Fsm
+participant "Diagram /\nIState / Transition" as Model
+participant "Concrete\nValidator" as Validator
+
+Runner -> Test : voer testmethode uit
+
+group Arrange — bouw een minimaal diagram
+    Test -> Fsm : Simple(id, type) / Compound(...)
+    Fsm --> Test : IState
+    Test -> Fsm : Connect(source, target, trigger, guard)
+    Fsm -> Model : source.AddTransition(t)
+    Fsm --> Test : Transition
+    Test -> Model : new Diagram(states, transitions)
+end
+
+group Act — draai de echte validator
+    Test -> Validator : new ConcreteValidator()
+    Test -> Model : diagram.Accept(validator)
+
+    note over Model, Validator
+      Double dispatch (Visitor):
+      Diagram.Accept bezoekt eerst elke
+      state en transitie, daarna zichzelf.
+    end note
+
+    Model -> Validator : Visit(SimpleState)
+    Model -> Validator : Visit(CompoundState)
+    Model -> Validator : Visit(Transition)
+    Model -> Validator : Visit(Diagram)
+    Validator -> Validator : AddError(...) bij overtreding
+end
+
+group Assert — controleer de uitkomst
+    Test -> Validator : IsValid / Errors
+    Validator --> Test : bool + foutmeldingen
+    Test -> Test : Assert.False(IsValid) /\nAssert.Contains(...)
+end
+
+Test --> Runner : Passed / Failed
+
+@enduml
